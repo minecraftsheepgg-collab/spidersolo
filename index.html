@@ -224,7 +224,7 @@ ru:{
   suitsMismatch:'❌ Масти не совпадают!', badMove:'❌ Невозможный ход!',
   stockEmpty:'📦 Колода пуста!', fillEmpty:'⚠️ Заполни пустые столбцы!',
   stackDone:'🎉 Стопка собрана!', undoDone:'↶ Ход отменён', nothingUndo:'📜 Нечего отменять',
-  plusHints:'🎁 +3 подсказки!', adUnavailable:'😕 Реклама недоступна', devFree:'🎁 +3 подсказки',
+  plusHints:'🎁 +3 подсказки зачислены!', adUnavailable:'😕 Реклама недоступна', devFree:'🎁 +3 подсказки зачислены!',
   easy:'Лёгкий', medium:'Средний', hard:'Сложный', dailyName:'📅 Ежедневное испытание',
   goodLuck:'Удачи!', best:'Лучший', bestStreakLbl:'🏅 Лучшая',
   tNew:'Новая игра', tSound:'Звук', tUndo:'Отмена хода', tHint:'Подсказка',
@@ -243,7 +243,7 @@ en:{
   suitsMismatch:"❌ Suits don't match!", badMove:'❌ Invalid move!',
   stockEmpty:'📦 Stock is empty!', fillEmpty:'⚠️ Fill empty columns first!',
   stackDone:'🎉 Stack completed!', undoDone:'↶ Move undone', nothingUndo:'📜 Nothing to undo',
-  plusHints:'🎁 +3 hints!', adUnavailable:'😕 Ad unavailable', devFree:'🎁 +3 hints',
+  plusHints:'🎁 +3 hints added!', adUnavailable:'😕 Ad unavailable', devFree:'🎁 +3 hints added!',
   easy:'Easy', medium:'Medium', hard:'Hard', dailyName:'📅 Daily Challenge',
   goodLuck:'Good luck!', best:'Best', bestStreakLbl:'🏅 Best',
   tNew:'New game', tSound:'Sound', tUndo:'Undo move', tHint:'Hint',
@@ -299,7 +299,7 @@ function showInterstitial(){
 
 function showRewardedHint(){
   sound.unlock();
-  if(!window.pikabuSDK){ grantHints(); showMessage(t('devFree')); return; }
+  if(!window.pikabuSDK){ grantHints(); return; }
   gameplayStop(); pauseTimer();
   try{
     window.pikabuSDK.adv.showRewarded({callbacks:{
@@ -310,7 +310,13 @@ function showRewardedHint(){
   }catch(e){ resumeTimer(); if(!gameWon)gameplayStart(); showMessage(t('adUnavailable')); }
 }
 
-function grantHints(){ hintsLeft+=3; updateHintBadge(); showMessage(t('plusHints')); sound.stack(); }
+// ✅ ИСПРАВЛЕНИЕ: теперь просто зачисляет подсказки, не тратя их автоматически
+function grantHints(){ 
+  hintsLeft += 3; 
+  updateHintBadge(); 
+  showMessage(t('plusHints')); 
+  sound.stack();
+}
 
 function loadCloudData(){
   if(!window.pikabuSDK) return;
@@ -349,7 +355,6 @@ function mergeStats(local,cloud){
 function submitScore(score){
   if(!window.pikabuSDK) return;
   try{
-    // Если в Пикабу будут доступны лидерборды, раскомментируйте и адаптируйте под их API
     // window.pikabuSDK.getLeaderboards().then(lb=>lb.setLeaderboardScore('spiderSoloScore',score)).catch(()=>{});
   }catch(e){}
 }
@@ -605,8 +610,14 @@ function findHint(){
       for(let tc=0;tc<10;tc++){
         if(tc===sc)continue;
         const tg=columns[tc];let ok=false;
-        if(tg.length===0){if(col[ci].value!==13)ok=true;}
-        else if(tg[tg.length-1].value===col[ci].value+1)ok=true;
+        
+        // ✅ ИСПРАВЛЕНИЕ: в пустой столбец можно класть любую карту
+        if(tg.length===0){ 
+          ok = true; 
+        } else if(tg[tg.length-1].value === col[ci].value + 1) {
+          ok = true;
+        }
+        
         if(!ok)continue;
         let s=0;
         if(ci>0&&!col[ci-1].faceUp)s+=200;
